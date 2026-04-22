@@ -12,7 +12,6 @@ use std::path::PathBuf;
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
-use big_space::prelude::*;
 use bevy_urdf::{
     draw_joint_controls, ArcballCamera, LoadRobot, PackageMap, Robot, RobotArms, RobotRoot,
     UiState, UrdfPlugin,
@@ -163,8 +162,7 @@ fn main() {
         .unwrap_or_else(|| PendingLoad::Catalog("panda".to_string()));
 
     App::new()
-        .add_plugins(DefaultPlugins.build().disable::<TransformPlugin>())
-        .add_plugins(BigSpaceDefaultPlugins)
+        .add_plugins(DefaultPlugins)
         .add_plugins(UrdfPlugin)
         .insert_resource(Selection {
             pending: Some(initial),
@@ -195,9 +193,6 @@ struct CurrentRobot {
     root: Option<Entity>,
 }
 
-#[derive(Resource)]
-struct WorldGrid(Entity);
-
 fn setup(mut commands: Commands) {
     commands.spawn((
         DirectionalLight {
@@ -213,23 +208,15 @@ fn setup(mut commands: Commands) {
     });
     commands.init_resource::<CurrentRobot>();
 
-    let mut grid_entity = None;
-    commands.spawn_big_space_default(|grid| {
-        grid.spawn_spatial((
-            Camera3d::default(),
-            Transform::from_xyz(3.0, 2.0, 3.0).looking_at(Vec3::new(0.0, 0.4, 0.0), Vec3::Y),
-            ArcballCamera {
-                focus: Vec3::new(0.0, 0.4, 0.0),
-                distance: 3.0,
-                ..default()
-            },
-            FloatingOrigin,
-        ));
-        grid_entity = Some(grid.id());
-    });
-    if let Some(e) = grid_entity {
-        commands.insert_resource(WorldGrid(e));
-    }
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(3.0, 2.0, 3.0).looking_at(Vec3::new(0.0, 0.4, 0.0), Vec3::Y),
+        ArcballCamera {
+            focus: Vec3::new(0.0, 0.4, 0.0),
+            distance: 3.0,
+            ..default()
+        },
+    ));
 }
 
 fn setup_egui_style(mut contexts: EguiContexts, mut done: Local<bool>) {
@@ -276,14 +263,9 @@ fn apply_pending_load(
     mut selection: ResMut<Selection>,
     mut current: ResMut<CurrentRobot>,
     mut package_map: ResMut<PackageMap>,
-    world_grid: Option<Res<WorldGrid>>,
     mut cameras: Query<&mut ArcballCamera>,
 ) {
     let Some(pending) = selection.pending.take() else {
-        return;
-    };
-    let Some(world_grid) = world_grid else {
-        selection.pending = Some(pending);
         return;
     };
 
@@ -334,8 +316,16 @@ fn apply_pending_load(
         cam.distance = distance;
     }
 
+    // Spawn a plain top-level entity as the robot root; the URDF loader
+    // attaches `Robot` + spawns link children onto it.
     let robot_root = commands
-        .spawn((BigSpatialBundle::default(), ChildOf(world_grid.0)))
+        .spawn((
+            Transform::default(),
+            GlobalTransform::default(),
+            Visibility::default(),
+            InheritedVisibility::default(),
+            ViewVisibility::default(),
+        ))
         .id();
     commands.write_message(LoadRobot {
         path: urdf_path,

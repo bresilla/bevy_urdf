@@ -15,7 +15,6 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use big_space::prelude::BigSpaceSystems;
 use rapier3d::math::{Pose, Vector};
 use rapier3d::prelude::*;
 use rapier3d_urdf::{UrdfLoaderOptions, UrdfRobot};
@@ -31,7 +30,7 @@ impl Plugin for UrdfPhysicsPlugin {
             PostUpdate,
             (attach_link_bodies, drive_kinematic_bodies, step_physics)
                 .chain()
-                .after(BigSpaceSystems::PropagateLowPrecision),
+                .after(bevy::transform::TransformSystems::Propagate),
         );
     }
 }

@@ -1,4 +1,3 @@
-pub mod big_space_root;
 pub mod camera;
 pub mod keyboard;
 pub mod kinematics;

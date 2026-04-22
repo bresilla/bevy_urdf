@@ -14,13 +14,12 @@ pub struct KinematicsPlugin;
 
 impl Plugin for KinematicsPlugin {
     fn build(&self, app: &mut App) {
-        // FK runs in `PostUpdate`, BEFORE big_space's low-precision
-        // propagation so freshly-written link Transforms get propagated
-        // into GlobalTransform the same frame.
+        // FK runs in `PostUpdate`, BEFORE Bevy's transform propagation
+        // so freshly-written link Transforms get pushed into their
+        // GlobalTransform the same frame.
         app.add_systems(
             PostUpdate,
-            sync_fk_to_transforms
-                .before(big_space::prelude::BigSpaceSystems::PropagateLowPrecision),
+            sync_fk_to_transforms.before(bevy::transform::TransformSystems::Propagate),
         );
     }
 }

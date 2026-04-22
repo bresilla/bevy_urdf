@@ -92,7 +92,7 @@ pub enum GeomKind {
 pub struct LoadRobot {
     pub path: PathBuf,
     /// If `Some`, the loader attaches components to this existing entity
-    /// (useful if the caller wants to place it under a BigSpace grid first).
+    /// (useful when the caller has already set the robot's Transform).
     /// If `None`, a new entity is spawned at the world origin.
     pub root: Option<Entity>,
 }
@@ -143,11 +143,9 @@ fn handle_load_requests(
                 continue;
             }
         };
-        // Caller owns the BigSpace. If they pass `root`, we attach there;
-        // otherwise we spawn a plain entity (caller can parent it into
-        // their grid via their own commands). We don't auto-create a
-        // BigSpace — every BigSpace needs exactly one `FloatingOrigin`,
-        // which is a policy the host app must decide.
+        // If the caller pre-spawned a root entity (e.g. to set its
+        // Transform), we attach our components there. Otherwise we
+        // spawn a bare top-level entity at the world origin.
         let entity = match msg.root {
             Some(e) => e,
             None => commands

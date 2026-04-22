@@ -28,6 +28,5 @@ Catalog covers ~30 robots (arms, mobile bases, humanoids, quadrupeds, grippers).
 - [`bevy`](https://bevyengine.org) 0.18 + [`bevy_egui`](https://github.com/vladbat00/bevy_egui) for rendering / UI
 - [`urdf-rs`](https://github.com/openrr/urdf-rs) + [`k`](https://github.com/openrr/k) for parsing + kinematics (FK/IK)
 - [`rapier3d-urdf`](https://github.com/dimforge/rapier) for optional collider import
-- [`big_space`](https://github.com/aevyrie/big_space) floating-origin transforms
 
 URDF meshes live under `urdf/` (not tracked by git — copy in the packages you need).
