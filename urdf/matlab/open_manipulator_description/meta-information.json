@@ -1,0 +1,16 @@
+{
+    "robots": [
+        {
+            "name": "Open Manipulator",
+            "type": "robotic arm",
+            "manufacturer": "ROBOTIS",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/robotisOpenManipulator.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 33
+        }
+    ]
+}

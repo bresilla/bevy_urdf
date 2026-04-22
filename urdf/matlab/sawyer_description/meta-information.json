@@ -1,0 +1,16 @@
+{
+    "robots": [
+        {
+            "name": "Sawyer",
+            "type": "robotic arm",
+            "manufacturer": "Rethink Robotics",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/rethinkSawyer.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 40
+        }
+    ]
+}

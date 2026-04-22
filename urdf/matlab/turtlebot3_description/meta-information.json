@@ -1,0 +1,64 @@
+{
+    "robots": [
+        {
+            "name": "Turtlebot 3 Burger",
+            "type": "mobile robot",
+            "manufacturer": "ROBOTIS",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/robotisTurtleBot3Burger.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 41
+        },
+        {
+            "name": "Turtlebot 3 Waffle",
+            "type": "mobile robot",
+            "manufacturer": "ROBOTIS",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/robotisTurtleBot3Waffle.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 42
+        },
+        {
+            "name": "Turtlebot 3 Waffle",
+            "type": "mobile robot",
+            "manufacturer": "ROBOTIS",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/robotisTurtleBot3WaffleForOpenManipulator.urdf"
+            ],
+            "variant": "for Open Manipulator",
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 259
+        },
+        {
+            "name": "Turtlebot 3 Waffle Pi",
+            "type": "mobile robot",
+            "manufacturer": "ROBOTIS",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/robotisTurtleBot3WafflePi.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 43
+        },
+        {
+            "name": "Turtlebot 3 Waffle Pi",
+            "type": "mobile robot",
+            "manufacturer": "ROBOTIS",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/robotisTurtleBot3WafflePiForOpenManipulator.urdf"
+            ],
+            "variant": "for Open Manipulator",
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 260
+        }
+    ]
+}

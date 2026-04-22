@@ -1,0 +1,16 @@
+{
+    "robots": [
+        {
+            "name": "Movo",
+            "type": "mobile manipulator",
+            "manufacturer": "Kinova Robotics",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/kinovaMovo.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 32
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "robots": [
+        {
+            "name": "Baxter",
+            "type": "dual arm robot",
+            "manufacturer": "Rethink Robotics",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/rethinkBaxter.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 11
+        }
+    ]
+}

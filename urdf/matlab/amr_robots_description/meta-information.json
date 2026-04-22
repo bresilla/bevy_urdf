@@ -1,0 +1,40 @@
+{
+    "robots": [
+        {
+            "name": "Pioneer 3-AT",
+            "type": "robotic arm",
+            "manufacturer": "Adept Mobile Robots",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/amrPioneer3AT.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 7
+        },
+        {
+            "name": "Pioneer 3-DX",
+            "type": "robotic arm",
+            "manufacturer": "Adept Mobile Robots",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/amrPioneer3DX.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 8
+        },
+        {
+            "name": "Pioneer LX",
+            "type": "robotic arm",
+            "manufacturer": "Adept Mobile Robots",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/amrPioneerLX.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 9
+        }
+    ]
+}

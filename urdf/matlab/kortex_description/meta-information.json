@@ -1,0 +1,16 @@
+{
+    "robots": [
+        {
+            "name": "Gen3",
+            "type": "robotic arm",
+            "manufacturer": "Kinova Robotics",
+            "xacro-generated": false,
+            "urdf": [
+                "urdf/kinovaGen3.urdf"
+            ],
+            "variant": null,
+            "source-link": "https://se.mathworks.com/matlabcentral/fileexchange/98714-robotics-system-toolbox-robot-library-data",
+            "id": 28
+        }
+    ]
+}
