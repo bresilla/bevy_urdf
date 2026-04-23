@@ -1,24 +1,19 @@
-//! Rapier3d physics integration via `rapier3d-urdf`.
+//! Rapier3d (f64) physics integration.
 //!
-//! Instead of hand-rolling URDF → collider conversion (which missed mesh
-//! colliders and got joint axes wrong), we delegate to dimforge's
-//! `rapier3d-urdf` crate. It builds rigid bodies + colliders + joints from
-//! the URDF in one shot, including STL / OBJ / DAE trimesh colliders via
-//! its `rapier3d-meshloader` backend.
-//!
-//! Because `bevy_urdf` drives kinematics from `k::Chain` (so IK has the
-//! same solver urdf-viz uses), we keep the bodies as
-//! `KinematicPositionBased` and update them from Bevy's `GlobalTransform`
-//! each frame. Joints built by rapier3d-urdf are discarded — they'd fight
-//! the IK-driven positions.
+//! Each URDF link is mirrored as a kinematic-position-based rigid body
+//! in the rapier world. Bevy's `GlobalTransform` (f32) is upcast to
+//! `f64` each frame and pushed to the body so physics tracks the
+//! FK-driven pose. Colliders are built directly from URDF geometry —
+//! we previously used `rapier3d-urdf`, but that crate wraps only the
+//! f32 rapier flavour, so the conversion is inlined here.
 
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use rapier3d::math::{Pose, Vector};
-use rapier3d::prelude::*;
-use rapier3d_urdf::{UrdfLoaderOptions, UrdfRobot};
+use rapier3d_f64::math::{Pose, Real, Vector};
+use rapier3d_f64::prelude::*;
 
+use crate::mesh::load_raw_mesh;
 use crate::robot::{Robot, RobotLink, RobotRoot};
 use crate::urdf::PackageMap;
 
@@ -73,8 +68,6 @@ pub struct LinkPhysicsBody {
     pub handle: RigidBodyHandle,
 }
 
-/// Marker put on a robot root once we've attached its rapier bodies so we
-/// don't try to do it twice.
 #[derive(Component)]
 pub struct RobotPhysicsAttached;
 
@@ -83,59 +76,54 @@ fn attach_link_bodies(
     mut world: ResMut<PhysicsWorld>,
     package_map: Res<PackageMap>,
     robots: Query<(Entity, &Robot), (With<RobotRoot>, Without<RobotPhysicsAttached>)>,
-    q_links: Query<(Entity, &RobotLink)>,
+    q_links: Query<(Entity, &RobotLink, &GlobalTransform)>,
 ) {
     for (robot_entity, robot) in robots.iter() {
-        // Build an index of URDF-link-name → our link Entity, so we can
-        // paste the rapier handles onto the right entities.
-        let mut link_entity_by_name: HashMap<String, Entity> = HashMap::new();
-        for (e, l) in q_links.iter() {
-            link_entity_by_name.insert(l.name.clone(), e);
+        let mut link_by_name: HashMap<String, (Entity, GlobalTransform)> = HashMap::new();
+        for (e, l, tf) in q_links.iter() {
+            link_by_name.insert(l.name.clone(), (e, *tf));
         }
 
-        // rapier3d-urdf's mesh loader takes a single base directory. We
-        // can't plug our `PackageMap` into it directly, so for robots
-        // whose URDF uses `package://` we compute a common base. Fallback
-        // is the URDF's own dir.
-        let mesh_dir = resolve_mesh_base(&robot.urdf, &package_map, &robot.urdf_dir);
+        let urdf_links: HashMap<&str, &urdf_rs::Link> = robot
+            .urdf
+            .links
+            .iter()
+            .map(|l| (l.name.as_str(), l))
+            .collect();
 
-        let options = UrdfLoaderOptions {
-            // Colliders only from <collision> — visual meshes become
-            // Bevy-side renderables, not colliders.
-            create_colliders_from_collision_shapes: true,
-            create_colliders_from_visual_shapes: false,
-            // We drive positions via FK, not physics. Fixed prevents
-            // gravity / integrator churn; kinematic_position would also
-            // work but Fixed is simpler while IK is the source of truth.
-            make_roots_fixed: true,
-            rigid_body_blueprint: RigidBodyBuilder::kinematic_position_based(),
-            ..Default::default()
-        };
-
-        let urdf_robot = UrdfRobot::from_robot(&robot.urdf, options, &mesh_dir);
-
-        // Insert bodies + colliders but skip joints. Joints would fight
-        // the FK-driven transforms.
         let PhysicsWorld {
             bodies, colliders, ..
         } = &mut *world;
-        for (i, urdf_link) in urdf_robot.links.into_iter().enumerate() {
-            let mut body = urdf_link.body;
-            // Force kinematic_position_based regardless of what the
-            // loader picked (dynamic for non-root, fixed for root when
-            // `make_roots_fixed`). We want unified FK-driven motion.
-            body.set_body_type(rapier3d::dynamics::RigidBodyType::KinematicPositionBased, false);
-            let body_handle = bodies.insert(body);
-            for collider in urdf_link.colliders {
-                colliders.insert_with_parent(collider, body_handle, bodies);
+
+        for (name, (entity, tf)) in &link_by_name {
+            let Some(urdf_link) = urdf_links.get(name.as_str()) else {
+                continue;
+            };
+            if urdf_link.collision.is_empty() {
+                continue;
             }
 
-            let urdf_name = &robot.urdf.links[i].name;
-            if let Some(entity) = link_entity_by_name.get(urdf_name) {
-                commands
-                    .entity(*entity)
-                    .insert(LinkPhysicsBody { handle: body_handle });
+            let pose = transform_to_pose(&tf.compute_transform());
+            let body = RigidBodyBuilder::kinematic_position_based()
+                .pose(pose)
+                .build();
+            let body_handle = bodies.insert(body);
+
+            for collision in &urdf_link.collision {
+                let local = urdf_pose_to_pose(&collision.origin);
+                if let Some(collider) = collider_from_urdf_geom(
+                    &collision.geometry,
+                    local,
+                    &package_map,
+                    robot.urdf_dir.as_path(),
+                ) {
+                    colliders.insert_with_parent(collider, body_handle, bodies);
+                }
             }
+
+            commands
+                .entity(*entity)
+                .insert(LinkPhysicsBody { handle: body_handle });
         }
 
         commands.entity(robot_entity).insert(RobotPhysicsAttached);
@@ -150,8 +138,7 @@ fn drive_kinematic_bodies(
         let Some(body) = world.bodies.get_mut(lpb.handle) else {
             continue;
         };
-        let t = tf.compute_transform();
-        let pose = Pose::from_parts(t.translation, t.rotation);
+        let pose = transform_to_pose(&tf.compute_transform());
         body.set_next_kinematic_position(pose);
     }
 }
@@ -186,38 +173,86 @@ fn step_physics(mut world: ResMut<PhysicsWorld>) {
     );
 }
 
-/// rapier3d-urdf expects a single base directory; our `PackageMap` is
-/// more flexible but its data isn't directly usable there. Heuristic:
-/// if every mesh URI in the URDF uses the same `package://<pkg>/...`
-/// prefix and that package is registered, return that package's root.
-/// Otherwise fall back to the URDF file's own directory.
-fn resolve_mesh_base(
-    robot: &urdf_rs::Robot,
+/// Bevy `Transform` (f32) → rapier `Pose` (f64). glam DVec3 + DQuat are
+/// used by `parry3d-f64`'s glamx backend; they have `::new` constructors
+/// that accept f64 scalars, so we upcast on the spot.
+fn transform_to_pose(t: &Transform) -> Pose {
+    let tr = t.translation;
+    let r = t.rotation;
+    Pose::from_parts(
+        Vector::new(tr.x as Real, tr.y as Real, tr.z as Real),
+        Rotation::from_xyzw(r.x as Real, r.y as Real, r.z as Real, r.w as Real),
+    )
+}
+
+fn urdf_pose_to_pose(pose: &urdf_rs::Pose) -> Pose {
+    let translation = Vector::new(pose.xyz[0], pose.xyz[1], pose.xyz[2]);
+    let rot = Rotation::from_euler(
+        rapier3d_f64::glamx::EulerRot::XYZ,
+        pose.rpy[0],
+        pose.rpy[1],
+        pose.rpy[2],
+    );
+    Pose::from_parts(translation, rot)
+}
+
+fn collider_from_urdf_geom(
+    geom: &urdf_rs::Geometry,
+    local: Pose,
     package_map: &PackageMap,
     urdf_dir: &std::path::Path,
-) -> std::path::PathBuf {
-    let mut unique: Option<String> = None;
-    for link in &robot.links {
-        for collision in &link.collision {
-            if let urdf_rs::Geometry::Mesh { filename, .. } = &collision.geometry {
-                if let Some(pkg) = filename
-                    .strip_prefix("package://")
-                    .and_then(|s| s.split_once('/'))
-                    .map(|(p, _)| p.to_string())
-                {
-                    match &unique {
-                        None => unique = Some(pkg),
-                        Some(existing) if existing == &pkg => {}
-                        Some(_) => return urdf_dir.to_path_buf(),
-                    }
+) -> Option<Collider> {
+    let builder = match geom {
+        urdf_rs::Geometry::Box { size } => Some(ColliderBuilder::cuboid(
+            size[0] * 0.5,
+            size[1] * 0.5,
+            size[2] * 0.5,
+        )),
+        urdf_rs::Geometry::Cylinder { radius, length } => {
+            Some(ColliderBuilder::cylinder(*length * 0.5, *radius))
+        }
+        urdf_rs::Geometry::Capsule { radius, length } => {
+            // URDF capsule extends along Z ± length/2.
+            Some(ColliderBuilder::capsule_z(*length * 0.5, *radius))
+        }
+        urdf_rs::Geometry::Sphere { radius } => Some(ColliderBuilder::ball(*radius)),
+        urdf_rs::Geometry::Mesh { filename, scale } => {
+            let path = match package_map.resolve(filename, urdf_dir) {
+                Ok(p) => p,
+                Err(e) => {
+                    warn!("bevy_urdf: mesh collider resolve failed for {filename}: {e}");
+                    return None;
                 }
+            };
+            let raw = match load_raw_mesh(&path) {
+                Ok(m) => m,
+                Err(e) => {
+                    warn!("bevy_urdf: mesh collider load failed for {path:?}: {e}");
+                    return None;
+                }
+            };
+            let scale_vec = scale
+                .as_ref()
+                .map(|s| [s[0], s[1], s[2]])
+                .unwrap_or([1.0, 1.0, 1.0]);
+            let vertices: Vec<Vector> = raw
+                .vertices
+                .iter()
+                .map(|v| {
+                    Vector::new(
+                        v[0] as Real * scale_vec[0],
+                        v[1] as Real * scale_vec[1],
+                        v[2] as Real * scale_vec[2],
+                    )
+                })
+                .collect();
+            let indices: Vec<[u32; 3]> = raw.faces.clone();
+            if vertices.is_empty() || indices.is_empty() {
+                warn!("bevy_urdf: mesh collider skipped (empty mesh {path:?})");
+                return None;
             }
+            Some(ColliderBuilder::trimesh(vertices, indices).ok()?)
         }
-    }
-    if let Some(pkg) = unique {
-        if let Ok(p) = package_map.resolve(&format!("package://{pkg}/"), urdf_dir) {
-            return p;
-        }
-    }
-    urdf_dir.to_path_buf()
+    };
+    builder.map(|b| b.position(local).build())
 }

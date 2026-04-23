@@ -1268,8 +1268,7 @@ dependencies = [
  "k",
  "mesh-loader",
  "rand 0.10.1",
- "rapier3d",
- "rapier3d-urdf",
+ "rapier3d-f64",
  "rfd",
  "thiserror 2.0.18",
  "urdf-rs",
@@ -3736,10 +3735,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "parry3d"
+name = "parry3d-f64"
 version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e04d21bda5249438b5695e7f08f1655524a6025bcdb186c324b7a66562f2d61"
+checksum = "38558e45fda09a243836f590b9890f7f21dd2078dd7aafc876a9e8998d378d42"
 dependencies = [
  "approx",
  "arrayvec",
@@ -3759,7 +3758,6 @@ dependencies = [
  "slab",
  "smallvec",
  "spade",
- "static_assertions",
  "thiserror 2.0.18",
 ]
 
@@ -4073,10 +4071,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "973443cf09a9c8656b574a866ab68dfa19f0867d0340648c7d2f6a71b8a8ea68"
 
 [[package]]
-name = "rapier3d"
+name = "rapier3d-f64"
 version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a576251c9dc2d6aff08470b7433096a04019c8b7bea9bbb7087f092c180feaea"
+checksum = "d27cfdde4915e866a008d520328b1236ad199990370965f944589d006140e6db"
 dependencies = [
  "approx",
  "arrayvec",
@@ -4089,40 +4087,13 @@ dependencies = [
  "num-derive",
  "num-traits",
  "ordered-float",
- "parry3d",
+ "parry3d-f64",
  "profiling",
  "rustc-hash 2.1.2",
  "simba 0.9.1",
  "static_assertions",
  "thiserror 2.0.18",
  "vec_map",
- "wide",
-]
-
-[[package]]
-name = "rapier3d-meshloader"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17fa9fe9f58fec64411e72049efafb63b5a0a129f7e93afd020e706187eea8dd"
-dependencies = [
- "mesh-loader",
- "profiling",
- "rapier3d",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "rapier3d-urdf"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ed92a2c39683a2ab457df4cf2ac35c7a03b6be4dcc4e2b00c80a72fcb96a14a"
-dependencies = [
- "anyhow",
- "bitflags 2.11.1",
- "log",
- "rapier3d",
- "rapier3d-meshloader",
- "urdf-rs",
 ]
 
 [[package]]

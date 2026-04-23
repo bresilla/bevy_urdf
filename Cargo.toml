@@ -5,14 +5,9 @@ edition = "2024"
 license = "MIT"
 
 [dependencies]
-rapier3d = "0.32"
-
-# dimforge's URDF → rapier loader. Handles all primitive + mesh colliders
-# (STL / OBJ / DAE) via its mesh-loader feature flags; also emits the
-# correct joint-axis masks and mass properties from URDF `<inertial>`.
-# We use its collider-building to drop my hand-rolled version in
-# `physics.rs` (which mishandled joint axes and skipped mesh colliders).
-rapier3d-urdf = { version = "0.13", features = ["stl", "collada", "wavefront"] }
+# f64 physics — `rapier3d-urdf` only wraps the f32 flavour so we drop it
+# and build URDF colliders inline against the f64 rapier math types.
+rapier3d-f64 = "0.32"
 
 # URDF parsing + forward/inverse kinematics. Same pairing upstream `urdf-viz`
 # uses (k re-exports nalgebra, which is also rapier3d's linear algebra).
