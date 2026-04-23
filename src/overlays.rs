@@ -8,6 +8,7 @@
 //! labels are drawn via egui using a world→screen projection.
 
 use bevy::asset::RenderAssetUsages;
+use bevy::gizmos::config::{DefaultGizmoConfigGroup, GizmoConfigStore};
 use bevy::mesh::{Indices, Mesh, PrimitiveTopology};
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
@@ -21,18 +22,60 @@ impl Plugin for UrdfOverlaysPlugin {
     fn build(&self, app: &mut App) {
         // Gizmos and visibility can run in Update; the egui label overlay
         // has to run in the primary-context schedule (see ui.rs rationale).
-        app.add_systems(Startup, spawn_world_grid)
+        app.add_systems(Startup, (spawn_world_grid, configure_gizmos))
             .add_systems(
                 Update,
                 (
                     apply_geom_visibility,
                     apply_world_grid_visibility,
+                    apply_body_opacity,
                     draw_joint_frames,
                     draw_link_frames,
                     draw_world_axes,
                 ),
             )
             .add_systems(EguiPrimaryContextPass, draw_link_name_labels);
+    }
+}
+
+/// Force all of our frame gizmos to draw on top of the robot body. Without
+/// this, the triads disappear inside link meshes as soon as the camera
+/// looks at the wrong angle. `depth_bias = -1.0` = always closer than
+/// real geometry (Bevy's GizmoConfig docs).
+fn configure_gizmos(mut config_store: ResMut<GizmoConfigStore>) {
+    let (cfg, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
+    cfg.depth_bias = -1.0;
+    cfg.line.width = 2.5;
+}
+
+/// Apply `DisplayToggles::body_opacity` to every visual geom's material.
+/// Stored RGB lives on `GeomBaseColor` so we can roundtrip to 1.0 without
+/// having lost the original colour.
+fn apply_body_opacity(
+    toggles: Res<DisplayToggles>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    q: Query<(&GeomKind, &MeshMaterial3d<StandardMaterial>, &crate::robot::GeomBaseColor)>,
+) {
+    let alpha = toggles.body_opacity.clamp(0.0, 1.0);
+    for (kind, mat_handle, base) in q.iter() {
+        if *kind != GeomKind::Visual {
+            continue;
+        }
+        let Some(material) = materials.get_mut(&mat_handle.0) else {
+            continue;
+        };
+        let target = base.0.with_alpha(alpha);
+        let target_mode = if alpha < 0.999 {
+            AlphaMode::Blend
+        } else {
+            AlphaMode::Opaque
+        };
+        if material.base_color != target {
+            material.base_color = target;
+        }
+        if material.alpha_mode != target_mode {
+            material.alpha_mode = target_mode;
+        }
     }
 }
 
@@ -349,12 +392,16 @@ fn finalize_mesh(
     mesh
 }
 
-/// R/G/B triad at world origin, length 1 m — mirrors ROS rviz's world frame.
+/// R/G/B triad tucked into a corner of the ground grid (5 m out along
+/// +X/+Z) so it doesn't intersect the robot sitting at origin. Small
+/// enough (0.3 m) to read as "world XYZ marker" without dominating the
+/// scene.
 fn draw_world_axes(toggles: Res<DisplayToggles>, mut gizmos: Gizmos) {
     if !toggles.show_world_axes {
         return;
     }
-    draw_triad(&mut gizmos, Transform::default(), 1.0);
+    let tf = Transform::from_xyz(5.0, 0.0, 5.0);
+    draw_triad(&mut gizmos, tf, 0.3);
 }
 
 fn draw_triad(gizmos: &mut Gizmos, tf: Transform, size: f32) {

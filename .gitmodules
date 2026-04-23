@@ -1,0 +1,4 @@
+[submodule "urdf"]
+	path = urdf
+	url = https://github.com/bresilla/urdf_collection.git
+	shallow = true

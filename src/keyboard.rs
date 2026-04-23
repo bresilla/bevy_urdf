@@ -34,6 +34,10 @@ pub struct DisplayToggles {
     pub show_world_grid: bool,
     /// R/G/B axis triad at world origin.
     pub show_world_axes: bool,
+    /// Opacity multiplier applied to every visual geom's `base_color`.
+    /// 1.0 = solid, 0.0 = invisible. Useful for peering inside the
+    /// robot to see joint frames / collision shells.
+    pub body_opacity: f32,
 }
 
 impl Default for DisplayToggles {
@@ -45,7 +49,11 @@ impl Default for DisplayToggles {
             show_link_frames: false,
             show_link_names: false,
             show_world_grid: true,
-            show_world_axes: true,
+            // Off by default — even tucked into the grid corner the R/G/B
+            // triad competes with the robot for the eye. Opt in via the
+            // Overlays panel when you need it.
+            show_world_axes: false,
+            body_opacity: 1.0,
         }
     }
 }

@@ -727,6 +727,13 @@ fn draw_panel(
             ui.checkbox(&mut toggles.show_joint_frames, "Joint frames");
             ui.checkbox(&mut toggles.show_link_frames, "Link frames");
             ui.checkbox(&mut toggles.show_link_names, "Link names");
+            ui.add_space(6.0);
+            ui.label("Body opacity");
+            ui.add(
+                egui::Slider::new(&mut toggles.body_opacity, 0.0..=1.0)
+                    .show_value(true)
+                    .fixed_decimals(2),
+            );
         }),
 
         LeftTab::Joints => floating_panel(ctx, "panel_joints", "Joints", PANEL_W, panel_h, |ui| {

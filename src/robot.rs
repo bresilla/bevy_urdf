@@ -81,6 +81,12 @@ pub enum GeomKind {
     Collision,
 }
 
+/// Snapshot of the material's RGB at spawn. Used by the opacity slider so
+/// we can reapply `alpha = body_opacity` without losing the original
+/// colour when the user slides back to 1.0.
+#[derive(Component, Debug, Clone, Copy)]
+pub struct GeomBaseColor(pub Color);
+
 /// Command: load a URDF from disk and spawn it as a robot entity.
 ///
 /// Emitted by the user; handled by `robot::handle_load_requests`. The
@@ -355,6 +361,7 @@ fn spawn_geometry(
             InheritedVisibility::default(),
             ViewVisibility::default(),
             kind,
+            GeomBaseColor(resolved),
             ChildOf(parent),
         ));
     }
