@@ -4,6 +4,16 @@ A Bevy-native URDF viewer + IK playground. Load a robot, grab the end-effector, 
 
 ![screenshot](misc/screenshot.png)
 
+## Get the URDFs
+
+URDF packages live in the [`urdf_collection`](https://github.com/bresilla/urdf_collection) submodule at `urdf/`. Fetch them when cloning:
+
+```
+git clone --recurse-submodules --shallow-submodules https://github.com/bresilla/bevy_urdf.git
+# or on an existing clone:
+git submodule update --init --recommend-shallow --depth 1
+```
+
 ## Run
 
 ```
