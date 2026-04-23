@@ -30,6 +30,10 @@ pub struct SubMesh {
     /// when present. Used as the fallback when the URDF doesn't supply
     /// a color for the visual.
     pub material_color: Option<Color>,
+    /// Absolute path to the diffuse-map texture referenced by the mesh
+    /// file's material (PNG / JPG). `None` when the material only has
+    /// a flat color or no texture info at all.
+    pub diffuse_texture: Option<std::path::PathBuf>,
 }
 
 /// Convert a URDF geometry block into one or more Bevy meshes.
@@ -50,17 +54,17 @@ pub fn bevy_meshes_from_urdf_geometry(
                 handle: meshes.add(Mesh::from(primitives::Cuboid::new(x, y, z))),
                 scale: Vec3::ONE,
                 material_color: None,
+                diffuse_texture: None,
             }])
         }
         urdf_rs::Geometry::Cylinder { radius, length } => Ok(vec![SubMesh {
-            // URDF cylinders have their axis along +Z; Bevy's Cylinder
-            // primitive has its axis along +Y. Caller must rotate.
             handle: meshes.add(Mesh::from(primitives::Cylinder::new(
                 *radius as f32,
                 *length as f32,
             ))),
             scale: Vec3::ONE,
             material_color: None,
+            diffuse_texture: None,
         }]),
         urdf_rs::Geometry::Capsule { radius, length } => Ok(vec![SubMesh {
             handle: meshes.add(Mesh::from(primitives::Capsule3d::new(
@@ -69,11 +73,13 @@ pub fn bevy_meshes_from_urdf_geometry(
             ))),
             scale: Vec3::ONE,
             material_color: None,
+            diffuse_texture: None,
         }]),
         urdf_rs::Geometry::Sphere { radius } => Ok(vec![SubMesh {
             handle: meshes.add(Mesh::from(primitives::Sphere::new(*radius as f32))),
             scale: Vec3::ONE,
             material_color: None,
+            diffuse_texture: None,
         }]),
         urdf_rs::Geometry::Mesh { filename, scale } => {
             let path = resolve(filename)?;
@@ -83,10 +89,11 @@ pub fn bevy_meshes_from_urdf_geometry(
                 .unwrap_or(Vec3::ONE);
             Ok(load_mesh_file_all(&path)?
                 .into_iter()
-                .map(|(mesh, mat_color)| SubMesh {
+                .map(|(mesh, mat_color, tex)| SubMesh {
                     handle: meshes.add(mesh),
                     scale: scale_vec,
                     material_color: mat_color,
+                    diffuse_texture: tex,
                 })
                 .collect())
         }
@@ -94,18 +101,31 @@ pub fn bevy_meshes_from_urdf_geometry(
 }
 
 /// Load every sub-mesh in a file as a separate Bevy `Mesh`, paired with
-/// the diffuse colour parsed from the corresponding material. Collada /
-/// Wavefront assign materials by position in `scene.materials` — we
-/// `zip` the two in the same order `rapier3d-meshloader` does.
-fn load_mesh_file_all(path: &Path) -> Result<Vec<(Mesh, Option<Color>)>, UrdfError> {
+/// the diffuse colour AND the diffuse-texture path parsed from the
+/// corresponding material. Collada / Wavefront assign materials by
+/// position in `scene.materials`, so we `zip` the two in the same
+/// order `rapier3d-meshloader` does.
+fn load_mesh_file_all(
+    path: &Path,
+) -> Result<Vec<(Mesh, Option<Color>, Option<std::path::PathBuf>)>, UrdfError> {
     let (meshes, materials) = load_raw_scene(path)?;
+    let mesh_dir = path.parent().map(|p| p.to_path_buf());
     let mut out = Vec::with_capacity(meshes.len());
     for (i, m) in meshes.into_iter().enumerate() {
-        let color = materials
-            .get(i)
+        let mat_ref = materials.get(i);
+        let color = mat_ref
             .and_then(|mat| mat.color.diffuse)
             .map(color4_to_bevy);
-        out.push((mesh_loader_to_bevy(m), color));
+        // Resolve texture paths relative to the mesh file so they work
+        // regardless of where the process was launched from.
+        let tex = mat_ref.and_then(|mat| mat.texture.diffuse.as_ref()).map(|p| {
+            if p.is_absolute() {
+                p.clone()
+            } else {
+                mesh_dir.as_ref().map(|d| d.join(p)).unwrap_or_else(|| p.clone())
+            }
+        });
+        out.push((mesh_loader_to_bevy(m), color, tex));
     }
     Ok(out)
 }

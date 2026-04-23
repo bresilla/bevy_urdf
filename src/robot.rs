@@ -193,20 +193,36 @@ fn spawn_robot_children(
     package_map: Res<PackageMap>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut images: ResMut<Assets<bevy::image::Image>>,
     mut robots: Query<(Entity, &mut Robot), With<RobotNeedsSpawn>>,
 ) {
     for (root_entity, mut robot) in robots.iter_mut() {
         let urdf_dir = robot.urdf_dir.clone();
         let resolve = |uri: &str| package_map.resolve(uri, &urdf_dir);
 
-        // Preflight: pre-resolve URDF material colors by name (URDF
-        // separates the <material name="..."/> reference from the actual
-        // color definition in the robot root).
-        let mut named_materials: std::collections::HashMap<&str, Color> =
+        // Preflight: pre-resolve URDF material colors by name. URDFs
+        // usually declare the colours at robot-root level
+        // (<material name="red"><color .../></material>) and then visual
+        // blocks carry name-only refs (<material name="red"/>). We also
+        // scan every visual — some URDFs (turtlebot3, roboticsl arm
+        // examples) inline the <color> on the first use of a name and
+        // just reference it by name thereafter.
+        let mut named_materials: std::collections::HashMap<String, Color> =
             std::collections::HashMap::new();
         for m in &robot.urdf.materials {
             if let Some(c) = &m.color {
-                named_materials.insert(m.name.as_str(), urdf_color_to_bevy(*c.rgba));
+                named_materials.insert(m.name.clone(), urdf_color_to_bevy(*c.rgba));
+            }
+        }
+        for link in &robot.urdf.links {
+            for v in &link.visual {
+                if let Some(m) = &v.material {
+                    if let Some(c) = &m.color {
+                        named_materials
+                            .entry(m.name.clone())
+                            .or_insert_with(|| urdf_color_to_bevy(*c.rgba));
+                    }
+                }
             }
         }
 
@@ -253,20 +269,22 @@ fn spawn_robot_children(
             link_entities.insert(link.name.clone(), link_entity);
 
             for visual in &link.visual {
+                let resolved_color = visual.material.as_ref().and_then(|m| {
+                    m.color
+                        .as_ref()
+                        .map(|c| urdf_color_to_bevy(*c.rgba))
+                        .or_else(|| named_materials.get(m.name.as_str()).copied())
+                });
                 spawn_geometry(
                     &mut commands,
                     link_entity,
                     GeomKind::Visual,
                     &visual.geometry,
                     &visual.origin,
-                    visual.material.as_ref().and_then(|m| {
-                        m.color
-                            .as_ref()
-                            .map(|c| urdf_color_to_bevy(*c.rgba))
-                            .or_else(|| named_materials.get(m.name.as_str()).copied())
-                    }),
+                    resolved_color,
                     &mut meshes,
                     &mut materials,
+                    &mut images,
                     &resolve,
                 );
             }
@@ -280,6 +298,7 @@ fn spawn_robot_children(
                     None,
                     &mut meshes,
                     &mut materials,
+                    &mut images,
                     &resolve,
                 );
             }
@@ -324,6 +343,7 @@ fn spawn_geometry(
     color: Option<Color>,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
+    images: &mut Assets<bevy::image::Image>,
     resolve: &impl Fn(&str) -> Result<PathBuf, UrdfError>,
 ) {
     let sub_meshes = match bevy_meshes_from_urdf_geometry(geometry, resolve, meshes) {
@@ -347,8 +367,20 @@ fn spawn_geometry(
     // users see in rviz / Gazebo.
     for sub in sub_meshes {
         let resolved = sub.material_color.or(color).unwrap_or(fallback_color);
+        let texture_handle = sub
+            .diffuse_texture
+            .as_ref()
+            .and_then(|p| load_texture(p, images));
         let mat = materials.add(StandardMaterial {
-            base_color: resolved,
+            // When a texture is present, keep base_color WHITE so the
+            // texture reads at full fidelity. Without a texture, paint
+            // the resolved flat colour.
+            base_color: if texture_handle.is_some() {
+                Color::WHITE
+            } else {
+                resolved
+            },
+            base_color_texture: texture_handle,
             ..default()
         });
         let transform = urdf_pose_to_transform(origin, sub.scale, geometry);
@@ -364,6 +396,39 @@ fn spawn_geometry(
             GeomBaseColor(resolved),
             ChildOf(parent),
         ));
+    }
+}
+
+/// Read an image file from disk and register it as a Bevy `Image`
+/// asset. Returns `None` on any failure so a busted texture path doesn't
+/// fail the whole robot load (the material falls back to a flat colour).
+fn load_texture(path: &std::path::Path, images: &mut Assets<bevy::image::Image>) -> Option<Handle<bevy::image::Image>> {
+    let bytes = match std::fs::read(path) {
+        Ok(b) => b,
+        Err(e) => {
+            warn!("bevy_urdf: texture read failed for {path:?}: {e}");
+            return None;
+        }
+    };
+    let ext = path
+        .extension()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    let image = bevy::image::Image::from_buffer(
+        &bytes,
+        bevy::image::ImageType::Extension(&ext),
+        bevy::image::CompressedImageFormats::empty(),
+        /* is_srgb */ true,
+        bevy::image::ImageSampler::Default,
+        bevy::asset::RenderAssetUsages::default(),
+    );
+    match image {
+        Ok(img) => Some(images.add(img)),
+        Err(e) => {
+            warn!("bevy_urdf: texture decode failed for {path:?}: {e}");
+            None
+        }
     }
 }
 

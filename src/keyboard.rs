@@ -113,10 +113,15 @@ fn handle_keys(
     if keys.just_pressed(KeyCode::KeyR) {
         let mut rng = rand::rng();
         let mut positions = robot.chain.joint_positions();
-        // Use per-joint limits if present; otherwise ±π.
+        // Use per-movable-joint limits if present; otherwise ±π. Must
+        // filter by `is_movable` to keep indices aligned with
+        // `joint_positions()` (which skips fixed joints).
         let mut limits: Vec<Option<(f32, f32)>> = Vec::with_capacity(positions.len());
         for node in robot.chain.iter() {
             let j = node.joint();
+            if !j.is_movable() {
+                continue;
+            }
             limits.push(j.limits.as_ref().map(|l| (l.min as f32, l.max as f32)));
         }
         for (i, p) in positions.iter_mut().enumerate() {

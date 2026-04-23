@@ -64,13 +64,19 @@ pub fn draw_joint_controls(
     ui.label(egui::RichText::new("Joints").strong());
     ui.separator();
 
-    // Snapshot joint names + limits and current positions, then write
-    // back in a second pass.
+    // `joint_positions()` returns ONE entry per movable joint (fixed
+    // joints are skipped). Walk `iter()` with the same `is_movable`
+    // filter so names line up with positions — otherwise the first N
+    // slider labels read "base_footprint", "imu_joint", etc. instead of
+    // the actual wheel / arm joint names.
     let mut positions = robot.chain.joint_positions();
     let mut names: Vec<String> = Vec::with_capacity(positions.len());
     let mut limits: Vec<Option<(f32, f32)>> = Vec::with_capacity(positions.len());
     for node in robot.chain.iter() {
         let joint = node.joint();
+        if !joint.is_movable() {
+            continue;
+        }
         names.push(joint.name.clone());
         limits.push(joint.limits.as_ref().map(|l| (l.min as f32, l.max as f32)));
     }

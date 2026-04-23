@@ -55,6 +55,7 @@ bevy = { version = "0.18", default-features = false, features = [
     "ktx2",
     "zstd_rust",
     "png",
+    "jpeg",
     "x11",
     "reflect_auto_register",
 ] }
