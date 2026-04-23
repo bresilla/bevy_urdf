@@ -166,6 +166,7 @@ fn main() {
         .add_plugins(UrdfPlugin)
         .insert_resource(Selection {
             pending: Some(initial),
+            current: None,
             custom_path: None,
             custom_label: None,
         })
@@ -183,9 +184,20 @@ enum PendingLoad {
 
 #[derive(Resource)]
 struct Selection {
+    /// A load request that hasn't been applied yet. Consumed by
+    /// `apply_pending_load` on the next Update tick.
     pending: Option<PendingLoad>,
+    /// The most recently *applied* selection, used for the picker's
+    /// displayed label. Survives `pending.take()`.
+    current: Option<AppliedSelection>,
     custom_path: Option<PathBuf>,
     custom_label: Option<String>,
+}
+
+#[derive(Clone)]
+enum AppliedSelection {
+    Catalog(String),
+    Custom(PathBuf),
 }
 
 #[derive(Resource, Default)]
@@ -271,7 +283,7 @@ fn apply_pending_load(
 
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
-    let (urdf_path, focus, distance, label) = match &pending {
+    let (urdf_path, focus, distance, label, applied) = match &pending {
         PendingLoad::Catalog(key) => {
             let entry = match find_entry(key) {
                 Some(e) => e,
@@ -295,7 +307,13 @@ fn apply_pending_load(
                     }
                 }
             }
-            (manifest_dir.join(entry.urdf), entry.focus, entry.distance, entry.label.to_string())
+            (
+                manifest_dir.join(entry.urdf),
+                entry.focus,
+                entry.distance,
+                entry.label.to_string(),
+                AppliedSelection::Catalog(entry.key.to_string()),
+            )
         }
         PendingLoad::Custom(p) => {
             install_package_map_for_custom(p, &mut package_map);
@@ -304,7 +322,13 @@ fn apply_pending_load(
                 .file_name()
                 .and_then(|n| n.to_str())
                 .map(|s| s.to_string());
-            (p.clone(), Vec3::new(0.0, 0.4, 0.0), 2.5, p.display().to_string())
+            (
+                p.clone(),
+                Vec3::new(0.0, 0.4, 0.0),
+                2.5,
+                p.display().to_string(),
+                AppliedSelection::Custom(p.clone()),
+            )
         }
     };
 
@@ -332,6 +356,7 @@ fn apply_pending_load(
         root: Some(robot_root),
     });
     current.root = Some(robot_root);
+    selection.current = Some(applied);
     info!("urdf-viewer: loading {label}");
 }
 
@@ -526,6 +551,28 @@ fn floating_panel(
         });
 }
 
+/// Tiny enum so the label logic can treat `PendingLoad` and
+/// `AppliedSelection` uniformly.
+enum PendingOrApplied {
+    Catalog(String),
+    Custom(PathBuf),
+}
+
+impl PendingOrApplied {
+    fn pending(p: &PendingLoad) -> Self {
+        match p {
+            PendingLoad::Catalog(k) => Self::Catalog(k.clone()),
+            PendingLoad::Custom(p) => Self::Custom(p.clone()),
+        }
+    }
+    fn applied(a: &AppliedSelection) -> Self {
+        match a {
+            AppliedSelection::Catalog(k) => Self::Catalog(k.clone()),
+            AppliedSelection::Custom(p) => Self::Custom(p.clone()),
+        }
+    }
+}
+
 fn draw_panel(
     mut contexts: EguiContexts,
     mut active: ResMut<LeftTab>,
@@ -584,14 +631,24 @@ fn draw_panel(
         return;
     }
 
-    let current_label: String = match &selection.pending {
-        Some(PendingLoad::Catalog(k)) => find_entry(k).map(|e| e.label).unwrap_or("?").to_string(),
-        Some(PendingLoad::Custom(p)) => p
+    // While a load is pending, show what's coming in; after it lands,
+    // show the settled `current` selection so the dropdown label doesn't
+    // flip to "?" the frame after `pending.take()`.
+    let current_label: String = match selection
+        .pending
+        .as_ref()
+        .map(PendingOrApplied::pending)
+        .or_else(|| selection.current.as_ref().map(PendingOrApplied::applied))
+    {
+        Some(PendingOrApplied::Catalog(k)) => {
+            find_entry(&k).map(|e| e.label).unwrap_or("?").to_string()
+        }
+        Some(PendingOrApplied::Custom(p)) => p
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("(custom)")
             .to_string(),
-        None => selection.custom_label.clone().unwrap_or_else(|| "?".to_string()),
+        None => "?".to_string(),
     };
 
     const PANEL_W: f32 = 320.0;

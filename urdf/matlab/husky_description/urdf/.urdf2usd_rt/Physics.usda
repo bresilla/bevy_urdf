@@ -1,0 +1,250 @@
+#usda 1.0
+(
+    customLayerData = {
+    string creator = "urdf2usd 0.0.1"
+}
+    kilogramsPerUnit = 1.0
+)
+
+over "husky"
+{
+    over "base_link" (
+        prepend apiSchemas = ["PhysicsArticulationRootAPI", "NewtonArticulationRootAPI", "PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+    )
+    {
+        float physics:mass = 0.0
+        point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+        float3 physics:diagonalInertia = (0.0, 0.0, 0.0)
+        quatf physics:principalAxes = (1.0, 0.0, 0.0, 0.0)
+        over "inertial_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 46.034000396728516
+            point3f physics:centerOfMass = (-0.0006500000017695129, -0.08500000089406967, 0.06199999898672104)
+            float3 physics:diagonalInertia = (0.5917425155639648, 1.7390886545181274, 2.0395689010620117)
+            quatf physics:principalAxes = (0.9990835189819336, -0.0011322650825604796, -0.04153281822800636, 0.010286935605108738)
+        }
+        over "front_left_wheel_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 2.63700008392334
+            point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+            float3 physics:diagonalInertia = (0.02466999925673008, 0.02466999925673008, 0.044110000133514404)
+            quatf physics:principalAxes = (0.7071067690849304, -0.7071067690849304, 0.0, 0.0)
+        }
+        over "front_right_wheel_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 2.63700008392334
+            point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+            float3 physics:diagonalInertia = (0.02466999925673008, 0.02466999925673008, 0.044110000133514404)
+            quatf physics:principalAxes = (0.7071067690849304, -0.7071067690849304, 0.0, 0.0)
+        }
+        over "rear_left_wheel_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 2.63700008392334
+            point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+            float3 physics:diagonalInertia = (0.02466999925673008, 0.02466999925673008, 0.044110000133514404)
+            quatf physics:principalAxes = (0.7071067690849304, -0.7071067690849304, 0.0, 0.0)
+        }
+        over "rear_right_wheel_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 2.63700008392334
+            point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+            float3 physics:diagonalInertia = (0.02466999925673008, 0.02466999925673008, 0.044110000133514404)
+            quatf physics:principalAxes = (0.7071067690849304, -0.7071067690849304, 0.0, 0.0)
+        }
+        over "top_chassis_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 0.0
+            point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+            float3 physics:diagonalInertia = (0.0, 0.0, 0.0)
+            quatf physics:principalAxes = (1.0, 0.0, 0.0, 0.0)
+        }
+        over "user_rail_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 0.0
+            point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+            float3 physics:diagonalInertia = (0.0, 0.0, 0.0)
+            quatf physics:principalAxes = (1.0, 0.0, 0.0, 0.0)
+        }
+        over "front_bumper_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 0.0
+            point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+            float3 physics:diagonalInertia = (0.0, 0.0, 0.0)
+            quatf physics:principalAxes = (1.0, 0.0, 0.0, 0.0)
+        }
+        over "rear_bumper_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 0.0
+            point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+            float3 physics:diagonalInertia = (0.0, 0.0, 0.0)
+            quatf physics:principalAxes = (1.0, 0.0, 0.0, 0.0)
+        }
+        over "top_plate_link" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float physics:mass = 0.0
+            point3f physics:centerOfMass = (0.0, 0.0, 0.0)
+            float3 physics:diagonalInertia = (0.0, 0.0, 0.0)
+            quatf physics:principalAxes = (1.0, 0.0, 0.0, 0.0)
+        }
+    }
+    def Scope "Joints"
+    {
+        def PhysicsFixedJoint "RootJoint"
+        {
+            rel physics:body1 = </husky/base_link>
+            point3f physics:localPos0 = (0.0, 0.0, 0.0)
+            quatf physics:localRot0 = (1.0, 0.0, 0.0, 0.0)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (1.0, 0.0, 0.0, 0.0)
+        }
+        def PhysicsFixedJoint "inertial_joint"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/inertial_link>
+            point3f physics:localPos0 = (0.0, 0.0, 0.0)
+            quatf physics:localRot0 = (1.0, 0.0, 0.0, 0.0)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (1.0, 0.0, 0.0, 0.0)
+            custom token urdf:jointType = "fixed"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+        def PhysicsRevoluteJoint "front_left_wheel"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/front_left_wheel_link>
+            point3f physics:localPos0 = (0.25600001215934753, 0.28540000319480896, 0.03282000124454498)
+            quatf physics:localRot0 = (0.7071067690849304, 0.0, 0.0, 0.7071067690849304)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (0.7071067690849304, 0.0, 0.0, 0.7071067690849304)
+            uniform token physics:axis = "X"
+            custom token urdf:jointType = "continuous"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+        def PhysicsRevoluteJoint "front_right_wheel"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/front_right_wheel_link>
+            point3f physics:localPos0 = (0.25600001215934753, -0.28540000319480896, 0.03282000124454498)
+            quatf physics:localRot0 = (0.7071067690849304, 0.0, 0.0, 0.7071067690849304)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (0.7071067690849304, 0.0, 0.0, 0.7071067690849304)
+            uniform token physics:axis = "X"
+            custom token urdf:jointType = "continuous"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+        def PhysicsRevoluteJoint "rear_left_wheel"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/rear_left_wheel_link>
+            point3f physics:localPos0 = (-0.25600001215934753, 0.28540000319480896, 0.03282000124454498)
+            quatf physics:localRot0 = (0.7071067690849304, 0.0, 0.0, 0.7071067690849304)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (0.7071067690849304, 0.0, 0.0, 0.7071067690849304)
+            uniform token physics:axis = "X"
+            custom token urdf:jointType = "continuous"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+        def PhysicsRevoluteJoint "rear_right_wheel"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/rear_right_wheel_link>
+            point3f physics:localPos0 = (-0.25600001215934753, -0.28540000319480896, 0.03282000124454498)
+            quatf physics:localRot0 = (0.7071067690849304, 0.0, 0.0, 0.7071067690849304)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (0.7071067690849304, 0.0, 0.0, 0.7071067690849304)
+            uniform token physics:axis = "X"
+            custom token urdf:jointType = "continuous"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+        def PhysicsFixedJoint "top_chassis_joint"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/top_chassis_link>
+            point3f physics:localPos0 = (0.0, 0.0, 0.0)
+            quatf physics:localRot0 = (1.0, 0.0, 0.0, 0.0)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (1.0, 0.0, 0.0, 0.0)
+            custom token urdf:jointType = "fixed"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+        def PhysicsFixedJoint "user_rail"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/user_rail_link>
+            point3f physics:localPos0 = (0.2720000147819519, 0.0, 0.24500000476837158)
+            quatf physics:localRot0 = (1.0, 0.0, 0.0, 0.0)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (1.0, 0.0, 0.0, 0.0)
+            custom token urdf:jointType = "fixed"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+        def PhysicsFixedJoint "front_bumper"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/front_bumper_link>
+            point3f physics:localPos0 = (0.47999998927116394, 0.0, 0.09099999815225601)
+            quatf physics:localRot0 = (1.0, 0.0, 0.0, 0.0)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (1.0, 0.0, 0.0, 0.0)
+            custom token urdf:jointType = "fixed"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+        def PhysicsFixedJoint "rear_bumper"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/rear_bumper_link>
+            point3f physics:localPos0 = (-0.47999998927116394, 0.0, 0.09099999815225601)
+            quatf physics:localRot0 = (0.000001326794858869107, 0.0, 0.0, 1.0)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (1.0, 0.0, 0.0, 0.0)
+            custom token urdf:jointType = "fixed"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+        def PhysicsFixedJoint "top_plate_joint"
+        {
+            rel physics:body0 = </husky/base_link>
+            rel physics:body1 = </husky/base_link/top_plate_link>
+            point3f physics:localPos0 = (0.0812000036239624, 0.0, 0.24500000476837158)
+            quatf physics:localRot0 = (1.0, 0.0, 0.0, 0.0)
+            point3f physics:localPos1 = (0.0, 0.0, 0.0)
+            quatf physics:localRot1 = (1.0, 0.0, 0.0, 0.0)
+            custom token urdf:jointType = "fixed"
+            custom float urdf:limit:effort = 0.0
+            custom float urdf:limit:velocity = 0.0
+        }
+    }
+    def PhysicsScene "PhysicsScene" (
+        prepend apiSchemas = "NewtonSceneAPI"
+    )
+    {
+    }
+}

@@ -1,0 +1,318 @@
+<robot name="husky">
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/base_link.dae"/>
+      </geometry>
+      <material name="mtl_Dark_material">
+        <color rgba="0.010022825561463833 0.010022825561463833 0.010022825561463833 1"/>
+      </material>
+    </visual>
+    <collision name="collision_0">
+      <origin xyz="0 0 0.061875" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.9874 0.5709 0.12375"/>
+      </geometry>
+    </collision>
+    <collision name="collision_1">
+      <origin xyz="0 0 0.175625" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.78992 0.5709 0.10375"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="front_left_wheel_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="-1.5707962925663537 0 0"/>
+      <mass value="2.63700008392334"/>
+      <inertia ixx="0.02466999925673008" ixy="0" ixz="0" iyy="0.02466999925673008" iyz="0" izz="0.044110000133514404"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/wheel.dae"/>
+      </geometry>
+      <material name="mtl_Grey_material">
+        <color rgba="0.03310476243495941 0.03310476243495941 0.03310476243495941 1"/>
+      </material>
+    </visual>
+    <collision name="collision_0">
+      <origin xyz="0 0 0" rpy="1.570794943867633 0 0"/>
+      <geometry>
+        <cylinder radius="0.1651" length="0.1143"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="front_right_wheel_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="-1.5707962925663537 0 0"/>
+      <mass value="2.63700008392334"/>
+      <inertia ixx="0.02466999925673008" ixy="0" ixz="0" iyy="0.02466999925673008" iyz="0" izz="0.044110000133514404"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/wheel.dae"/>
+      </geometry>
+      <material name="mtl_Grey_material">
+        <color rgba="0.03310476243495941 0.03310476243495941 0.03310476243495941 1"/>
+      </material>
+    </visual>
+    <collision name="collision_0">
+      <origin xyz="0 0 0" rpy="1.570794943867633 0 0"/>
+      <geometry>
+        <cylinder radius="0.1651" length="0.1143"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="rear_left_wheel_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="-1.5707962925663537 0 0"/>
+      <mass value="2.63700008392334"/>
+      <inertia ixx="0.02466999925673008" ixy="0" ixz="0" iyy="0.02466999925673008" iyz="0" izz="0.044110000133514404"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/wheel.dae"/>
+      </geometry>
+      <material name="mtl_Grey_material">
+        <color rgba="0.03310476243495941 0.03310476243495941 0.03310476243495941 1"/>
+      </material>
+    </visual>
+    <collision name="collision_0">
+      <origin xyz="0 0 0" rpy="1.570794943867633 0 0"/>
+      <geometry>
+        <cylinder radius="0.1651" length="0.1143"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="rear_right_wheel_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="-1.5707962925663537 0 0"/>
+      <mass value="2.63700008392334"/>
+      <inertia ixx="0.02466999925673008" ixy="0" ixz="0" iyy="0.02466999925673008" iyz="0" izz="0.044110000133514404"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/wheel.dae"/>
+      </geometry>
+      <material name="mtl_Grey_material">
+        <color rgba="0.03310476243495941 0.03310476243495941 0.03310476243495941 1"/>
+      </material>
+    </visual>
+    <collision name="collision_0">
+      <origin xyz="0 0 0" rpy="1.570794943867633 0 0"/>
+      <geometry>
+        <cylinder radius="0.1651" length="0.1143"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="top_chassis_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/top_chassis.dae"/>
+      </geometry>
+      <material name="mtl_Yellow_material">
+        <color rgba="0.6038274168968201 0.6038274168968201 0 1"/>
+      </material>
+    </visual>
+  </link>
+  <link name="user_rail_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/user_rail.dae"/>
+      </geometry>
+      <material name="mtl_Dark_material">
+        <color rgba="0.010022825561463833 0.010022825561463833 0.010022825561463833 1"/>
+      </material>
+    </visual>
+  </link>
+  <link name="front_bumper_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/bumper.dae"/>
+      </geometry>
+      <material name="mtl_Dark_material">
+        <color rgba="0.010022825561463833 0.010022825561463833 0.010022825561463833 1"/>
+      </material>
+    </visual>
+  </link>
+  <link name="rear_bumper_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/bumper.dae"/>
+      </geometry>
+      <material name="mtl_Dark_material">
+        <color rgba="0.010022825561463833 0.010022825561463833 0.010022825561463833 1"/>
+      </material>
+    </visual>
+  </link>
+  <link name="top_plate_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual name="visual_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/top_plate.dae"/>
+      </geometry>
+      <material name="mtl_Dark_material">
+        <color rgba="0.010022825561463833 0.010022825561463833 0.010022825561463833 1"/>
+      </material>
+    </visual>
+    <collision name="collision_0">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://husky_description/meshes/top_plate.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="top_plate_front_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <link name="top_plate_rear_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <link name="inertial_link">
+    <inertial>
+      <origin xyz="-0.0006500000017695129 -0.08500000089406967 0.06199999898672104" rpy="-0.003127734000869772 -0.08306169084428963 0.020721987773684194"/>
+      <mass value="46.034000396728516"/>
+      <inertia ixx="0.5917425155639648" ixy="0" ixz="0" iyy="1.7390886545181274" iyz="0" izz="2.0395689010620117"/>
+    </inertial>
+  </link>
+  <link name="base_footprint">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <link name="imu_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="inertial_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="inertial_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <joint name="front_left_wheel" type="continuous">
+    <origin xyz="0.25600001215934753 0.28540000319480896 0.03282000124454498" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="front_left_wheel_link"/>
+    <axis xyz="0.00000003422854177870249 0.9999999657714582 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <joint name="front_right_wheel" type="continuous">
+    <origin xyz="0.25600001215934753 -0.28540000319480896 0.03282000124454498" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="front_right_wheel_link"/>
+    <axis xyz="0.00000003422854177870249 0.9999999657714582 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <joint name="rear_left_wheel" type="continuous">
+    <origin xyz="-0.25600001215934753 0.28540000319480896 0.03282000124454498" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="rear_left_wheel_link"/>
+    <axis xyz="0.00000003422854177870249 0.9999999657714582 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <joint name="rear_right_wheel" type="continuous">
+    <origin xyz="-0.25600001215934753 -0.28540000319480896 0.03282000124454498" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="rear_right_wheel_link"/>
+    <axis xyz="0.00000003422854177870249 0.9999999657714582 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <joint name="top_chassis_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="top_chassis_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <joint name="user_rail" type="fixed">
+    <origin xyz="0.2720000147819519 0 0.24500000476837158" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="user_rail_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <joint name="front_bumper" type="fixed">
+    <origin xyz="0.47999998927116394 0 0.09099999815225601" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="front_bumper_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <joint name="rear_bumper" type="fixed">
+    <origin xyz="-0.47999998927116394 0 0.09099999815225601" rpy="0 0 3.1415900000000754"/>
+    <parent link="base_link"/>
+    <child link="rear_bumper_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <joint name="top_plate_joint" type="fixed">
+    <origin xyz="0.0812000036239624 0 0.24500000476837158" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="top_plate_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="0" effort="0" velocity="0"/>
+  </joint>
+  <material name="mtl_Yellow_material">
+    <color rgba="0.6038274168968201 0.6038274168968201 0 1"/>
+  </material>
+  <material name="mtl_Grey_material">
+    <color rgba="0.03310476243495941 0.03310476243495941 0.03310476243495941 1"/>
+  </material>
+  <material name="mtl_Dark_material">
+    <color rgba="0.010022825561463833 0.010022825561463833 0.010022825561463833 1"/>
+  </material>
+</robot>

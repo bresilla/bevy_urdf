@@ -333,16 +333,21 @@ fn spawn_geometry(
         GeomKind::Collision => Visibility::Hidden,
     };
 
-    // One entity per sub-mesh so multi-material DAEs keep all their
-    // geometry. They share the same origin transform and material.
-    for (handle, mesh_scale) in sub_meshes {
+    // Priority: mesh-file material (per-sub-mesh diffuse from DAE / OBJ)
+    // > URDF color > grey fallback. In practice URDF materials are
+    // usually named references to a single flat colour (e.g. Anymal's
+    // `anymal_material` = 0.7 grey), while the source DAE carries richer
+    // per-sub-mesh liveries. Letting the mesh colour win matches what
+    // users see in rviz / Gazebo.
+    for sub in sub_meshes {
+        let resolved = sub.material_color.or(color).unwrap_or(fallback_color);
         let mat = materials.add(StandardMaterial {
-            base_color: color.unwrap_or(fallback_color),
+            base_color: resolved,
             ..default()
         });
-        let transform = urdf_pose_to_transform(origin, mesh_scale, geometry);
+        let transform = urdf_pose_to_transform(origin, sub.scale, geometry);
         commands.spawn((
-            Mesh3d(handle),
+            Mesh3d(sub.handle),
             MeshMaterial3d(mat),
             transform,
             GlobalTransform::default(),

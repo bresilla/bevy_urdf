@@ -22,65 +22,96 @@ impl Plugin for MeshPlugin {
     }
 }
 
+/// One Bevy-ready sub-mesh produced from a URDF geometry block.
+pub struct SubMesh {
+    pub handle: Handle<Mesh>,
+    pub scale: Vec3,
+    /// Diffuse color parsed from the source file's material (DAE / OBJ)
+    /// when present. Used as the fallback when the URDF doesn't supply
+    /// a color for the visual.
+    pub material_color: Option<Color>,
+}
+
 /// Convert a URDF geometry block into one or more Bevy meshes.
 ///
-/// Returns a list of `(handle, scale)` pairs. Primitives always produce a
-/// single entry; mesh files can produce multiple entries when the source
-/// DAE / OBJ has several sub-meshes (one per material) — we spawn one
-/// entity per sub-mesh so nothing gets lost to an over-eager merge (this
-/// was the cause of the "chopped" UR5 rendering).
+/// Primitives always produce a single entry; mesh files can produce
+/// multiple entries when the source DAE / OBJ has several sub-meshes
+/// (one per material) — we spawn one entity per sub-mesh so nothing
+/// gets lost to an over-eager merge.
 pub fn bevy_meshes_from_urdf_geometry(
     geometry: &urdf_rs::Geometry,
     resolve: impl Fn(&str) -> Result<std::path::PathBuf, UrdfError>,
     meshes: &mut Assets<Mesh>,
-) -> Result<Vec<(Handle<Mesh>, Vec3)>, UrdfError> {
+) -> Result<Vec<SubMesh>, UrdfError> {
     match geometry {
         urdf_rs::Geometry::Box { size } => {
             let [x, y, z] = [size[0] as f32, size[1] as f32, size[2] as f32];
-            let mesh = Mesh::from(primitives::Cuboid::new(x, y, z));
-            Ok(vec![(meshes.add(mesh), Vec3::ONE)])
+            Ok(vec![SubMesh {
+                handle: meshes.add(Mesh::from(primitives::Cuboid::new(x, y, z))),
+                scale: Vec3::ONE,
+                material_color: None,
+            }])
         }
-        urdf_rs::Geometry::Cylinder { radius, length } => {
+        urdf_rs::Geometry::Cylinder { radius, length } => Ok(vec![SubMesh {
             // URDF cylinders have their axis along +Z; Bevy's Cylinder
             // primitive has its axis along +Y. Caller must rotate.
-            let mesh = Mesh::from(primitives::Cylinder::new(*radius as f32, *length as f32));
-            Ok(vec![(meshes.add(mesh), Vec3::ONE)])
-        }
-        urdf_rs::Geometry::Capsule { radius, length } => {
-            // URDF capsule: total length along Z. Bevy's Capsule3d takes
-            // cylinder half_length and is Y-up — same axis quirk as above.
-            let mesh = Mesh::from(primitives::Capsule3d::new(
+            handle: meshes.add(Mesh::from(primitives::Cylinder::new(
                 *radius as f32,
                 *length as f32,
-            ));
-            Ok(vec![(meshes.add(mesh), Vec3::ONE)])
-        }
-        urdf_rs::Geometry::Sphere { radius } => {
-            let mesh = Mesh::from(primitives::Sphere::new(*radius as f32));
-            Ok(vec![(meshes.add(mesh), Vec3::ONE)])
-        }
+            ))),
+            scale: Vec3::ONE,
+            material_color: None,
+        }]),
+        urdf_rs::Geometry::Capsule { radius, length } => Ok(vec![SubMesh {
+            handle: meshes.add(Mesh::from(primitives::Capsule3d::new(
+                *radius as f32,
+                *length as f32,
+            ))),
+            scale: Vec3::ONE,
+            material_color: None,
+        }]),
+        urdf_rs::Geometry::Sphere { radius } => Ok(vec![SubMesh {
+            handle: meshes.add(Mesh::from(primitives::Sphere::new(*radius as f32))),
+            scale: Vec3::ONE,
+            material_color: None,
+        }]),
         urdf_rs::Geometry::Mesh { filename, scale } => {
             let path = resolve(filename)?;
             let scale_vec = scale
                 .as_ref()
                 .map(|s| Vec3::new(s[0] as f32, s[1] as f32, s[2] as f32))
                 .unwrap_or(Vec3::ONE);
-            let sub_meshes = load_mesh_file_all(&path)?;
-            Ok(sub_meshes
+            Ok(load_mesh_file_all(&path)?
                 .into_iter()
-                .map(|m| (meshes.add(m), scale_vec))
+                .map(|(mesh, mat_color)| SubMesh {
+                    handle: meshes.add(mesh),
+                    scale: scale_vec,
+                    material_color: mat_color,
+                })
                 .collect())
         }
     }
 }
 
-/// Load every sub-mesh in a file as a separate Bevy `Mesh`. No merging —
-/// multi-material DAEs ship as several meshes in one file (one per
-/// material); merging them loses per-group attributes and (in practice)
-/// dropped geometry on the UR5 and Panda.
-fn load_mesh_file_all(path: &Path) -> Result<Vec<Mesh>, UrdfError> {
-    let scenes = load_raw_scene(path)?;
-    Ok(scenes.into_iter().map(mesh_loader_to_bevy).collect())
+/// Load every sub-mesh in a file as a separate Bevy `Mesh`, paired with
+/// the diffuse colour parsed from the corresponding material. Collada /
+/// Wavefront assign materials by position in `scene.materials` — we
+/// `zip` the two in the same order `rapier3d-meshloader` does.
+fn load_mesh_file_all(path: &Path) -> Result<Vec<(Mesh, Option<Color>)>, UrdfError> {
+    let (meshes, materials) = load_raw_scene(path)?;
+    let mut out = Vec::with_capacity(meshes.len());
+    for (i, m) in meshes.into_iter().enumerate() {
+        let color = materials
+            .get(i)
+            .and_then(|mat| mat.color.diffuse)
+            .map(color4_to_bevy);
+        out.push((mesh_loader_to_bevy(m), color));
+    }
+    Ok(out)
+}
+
+fn color4_to_bevy(c: [f32; 4]) -> Color {
+    Color::srgba(c[0], c[1], c[2], c[3])
 }
 
 /// Raw-mesh variant for callers that need the vertex/index arrays (e.g.
@@ -101,7 +132,9 @@ pub fn load_raw_mesh(path: &Path) -> Result<mesh_loader::Mesh, UrdfError> {
     })
 }
 
-fn load_raw_scene(path: &Path) -> Result<Vec<mesh_loader::Mesh>, UrdfError> {
+fn load_raw_scene(
+    path: &Path,
+) -> Result<(Vec<mesh_loader::Mesh>, Vec<mesh_loader::Material>), UrdfError> {
     let scene = Loader::default()
         .load(path)
         .map_err(|e| UrdfError::Mesh {
@@ -114,7 +147,7 @@ fn load_raw_scene(path: &Path) -> Result<Vec<mesh_loader::Mesh>, UrdfError> {
             message: "file contained no meshes".to_string(),
         });
     }
-    Ok(scene.meshes)
+    Ok((scene.meshes, scene.materials))
 }
 
 fn mesh_loader_to_bevy(src: mesh_loader::Mesh) -> Mesh {
