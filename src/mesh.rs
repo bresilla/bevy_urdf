@@ -9,7 +9,7 @@ use std::path::Path;
 use bevy::asset::RenderAssetUsages;
 use bevy::math::primitives;
 use bevy::prelude::*;
-use bevy::mesh::{Indices, Mesh, PrimitiveTopology};
+use bevy::mesh::{Indices, Mesh, PrimitiveTopology, VertexAttributeValues};
 use mesh_loader::Loader;
 
 use crate::urdf::UrdfError;
@@ -87,13 +87,24 @@ pub fn bevy_meshes_from_urdf_geometry(
                 .as_ref()
                 .map(|s| Vec3::new(s[0] as f32, s[1] as f32, s[2] as f32))
                 .unwrap_or(Vec3::ONE);
+            // Bake non-uniform scale into the vertices so normals stay
+            // correct. Transform.scale would apply the same factor to
+            // positions and normals, which distorts lighting on wheels
+            // and other squished/stretched meshes (tread grooves looked
+            // smeared on Robotti's tires).
+            let bake = (scale_vec - Vec3::ONE).abs().max_element() > 1e-6;
             Ok(load_mesh_file_all(&path)?
                 .into_iter()
-                .map(|(mesh, mat_color, tex)| SubMesh {
-                    handle: meshes.add(mesh),
-                    scale: scale_vec,
-                    material_color: mat_color,
-                    diffuse_texture: tex,
+                .map(|(mut mesh, mat_color, tex)| {
+                    if bake {
+                        apply_scale_to_mesh(&mut mesh, scale_vec);
+                    }
+                    SubMesh {
+                        handle: meshes.add(mesh),
+                        scale: if bake { Vec3::ONE } else { scale_vec },
+                        material_color: mat_color,
+                        diffuse_texture: tex,
+                    }
                 })
                 .collect())
         }
@@ -134,12 +145,37 @@ fn color4_to_bevy(c: [f32; 4]) -> Color {
     Color::srgba(c[0], c[1], c[2], c[3])
 }
 
+/// Multiply positions by `scale` and compensate normals with the
+/// inverse-transpose factor (per-component reciprocal for a diagonal
+/// scale). Re-normalises after so the result is unit-length.
+fn apply_scale_to_mesh(mesh: &mut Mesh, scale: Vec3) {
+    if let Some(VertexAttributeValues::Float32x3(positions)) =
+        mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION)
+    {
+        for p in positions.iter_mut() {
+            p[0] *= scale.x;
+            p[1] *= scale.y;
+            p[2] *= scale.z;
+        }
+    }
+    let inv = Vec3::new(1.0 / scale.x, 1.0 / scale.y, 1.0 / scale.z);
+    if let Some(VertexAttributeValues::Float32x3(normals)) =
+        mesh.attribute_mut(Mesh::ATTRIBUTE_NORMAL)
+    {
+        for n in normals.iter_mut() {
+            let v = Vec3::new(n[0] * inv.x, n[1] * inv.y, n[2] * inv.z).normalize_or_zero();
+            *n = [v.x, v.y, v.z];
+        }
+    }
+}
+
 /// Raw-mesh variant for callers that need the vertex/index arrays (e.g.
 /// rapier trimesh colliders). Returns all sub-meshes in load order.
 pub fn load_raw_mesh(path: &Path) -> Result<mesh_loader::Mesh, UrdfError> {
     // Merge everything here — for collision, a single trimesh is all a
     // collider wants, and we don't care about material boundaries.
     let scene = Loader::default()
+        .stl_parse_color(true)
         .merge_meshes(true)
         .load(path)
         .map_err(|e| UrdfError::Mesh {
@@ -156,6 +192,7 @@ fn load_raw_scene(
     path: &Path,
 ) -> Result<(Vec<mesh_loader::Mesh>, Vec<mesh_loader::Material>), UrdfError> {
     let scene = Loader::default()
+        .stl_parse_color(true)
         .load(path)
         .map_err(|e| UrdfError::Mesh {
             path: path.to_path_buf(),
@@ -167,6 +204,12 @@ fn load_raw_scene(
             message: "file contained no meshes".to_string(),
         });
     }
+
+    // Note: we deliberately do NOT honour `<up_axis>` from Collada.
+    // URDFs authored against a specific mesh set assume the raw vertex
+    // coordinates match what the URDF expects; rotating here breaks any
+    // URDF that was written against Y-up meshes (most of the ROS robot
+    // zoo — movo, kinova, etc.). Gazebo/rviz behave the same way.
     Ok((scene.meshes, scene.materials))
 }
 

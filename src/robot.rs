@@ -108,6 +108,12 @@ pub struct LoadRobot {
 #[derive(Component, Default)]
 pub struct RobotNeedsSpawn;
 
+/// Marker: robot has been spawned but its root translation hasn't been
+/// adjusted so the lowest visual geom sits at Y=0. Consumed once by
+/// `align_robot_to_ground`.
+#[derive(Component, Default)]
+pub struct RobotNeedsGroundAlign;
+
 pub struct RobotPlugin;
 
 impl Plugin for RobotPlugin {
@@ -122,7 +128,66 @@ impl Plugin for RobotPlugin {
                     spawn_robot_children,
                 )
                     .chain(),
+            )
+            .add_systems(
+                PostUpdate,
+                align_robot_to_ground
+                    .after(bevy::transform::TransformSystems::Propagate),
             );
+    }
+}
+
+/// Translate each just-spawned robot root upward so the minimum world-Y
+/// of its visual geometry sits at Y=0 (on the ground grid). Runs once
+/// per robot — needs two frames after spawn so `GlobalTransform`s for
+/// every descendant have propagated.
+fn align_robot_to_ground(
+    mut commands: Commands,
+    mut roots: Query<(Entity, &mut Transform), With<RobotNeedsGroundAlign>>,
+    geoms: Query<(&GlobalTransform, &GeomKind, &ChildOf)>,
+    parents: Query<&ChildOf>,
+) {
+    for (root, mut tf) in roots.iter_mut() {
+        let mut min_y = f32::INFINITY;
+        let mut saw_any = false;
+        for (gt, kind, child_of) in geoms.iter() {
+            if *kind != GeomKind::Visual {
+                continue;
+            }
+            // Walk up the parent chain to check if this geom belongs to
+            // the current robot root.
+            let mut cur = child_of.parent();
+            let mut belongs = cur == root;
+            let mut hops = 0;
+            while !belongs && hops < 16 {
+                match parents.get(cur) {
+                    Ok(p) => {
+                        cur = p.parent();
+                        if cur == root {
+                            belongs = true;
+                        }
+                    }
+                    Err(_) => break,
+                }
+                hops += 1;
+            }
+            if !belongs {
+                continue;
+            }
+            saw_any = true;
+            let y = gt.translation().y;
+            if y < min_y {
+                min_y = y;
+            }
+        }
+        if !saw_any {
+            // Descendants not yet propagated — try again next frame.
+            continue;
+        }
+        if min_y.is_finite() {
+            tf.translation.y -= min_y;
+        }
+        commands.entity(root).remove::<RobotNeedsGroundAlign>();
     }
 }
 
@@ -181,6 +246,7 @@ fn handle_load_requests(
                 link_entities: HashMap::new(),
             },
             RobotNeedsSpawn,
+            RobotNeedsGroundAlign,
         ));
         info!("bevy_urdf: loaded URDF from {:?}", msg.path);
     }

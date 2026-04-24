@@ -24,6 +24,7 @@ enum Category {
     Humanoid,
     Quadruped,
     Gripper,
+    Drone,
 }
 
 impl Category {
@@ -34,6 +35,7 @@ impl Category {
             Category::Humanoid => "Humanoids",
             Category::Quadruped => "Quadrupeds",
             Category::Gripper => "Grippers",
+            Category::Drone => "Drones",
         }
     }
 }
@@ -95,6 +97,9 @@ fn catalog() -> &'static [RobotEntry] {
         RobotEntry { key: "fanuc", label: "Fanuc M16iB", urdf: "urdf/matlab/fanuc_m16ib_support/urdf/fanucM16ib.urdf",
             packages: &[("fanuc_m16ib_support", "urdf/matlab/fanuc_m16ib_support")],
             focus: Vec3::new(0.0, 0.6, 0.0), distance: 2.2, category: Category::Arm },
+        RobotEntry { key: "artemy_arm", label: "Artemy Arm (Denso VS-060)", urdf: "urdf/oems/artemy/artemy_arm/urdf/artemy_arm.urdf",
+            packages: &[("artemy_arm", "urdf/oems/artemy/artemy_arm")],
+            focus: Vec3::new(0.0, 0.4, 0.0), distance: 1.8, category: Category::Arm },
         RobotEntry { key: "pioneer3at", label: "Pioneer 3-AT", urdf: "urdf/matlab/amr_robots_description/urdf/amrPioneer3AT.urdf",
             packages: &[("amr_robots_description", "urdf/matlab/amr_robots_description")],
             focus: Vec3::new(0.0, 0.2, 0.0), distance: 1.4, category: Category::Mobile },
@@ -134,20 +139,83 @@ fn catalog() -> &'static [RobotEntry] {
         RobotEntry { key: "baxter", label: "Rethink Baxter", urdf: "urdf/matlab/baxter_description/urdf/rethinkBaxter.urdf",
             packages: &[("baxter_description", "urdf/matlab/baxter_description")],
             focus: Vec3::new(0.0, 1.1, 0.0), distance: 3.0, category: Category::Humanoid },
-        RobotEntry { key: "anymal", label: "ANYmal B (best-effort DAE)", urdf: "urdf/oems/anymal_anybotics/anymal_b_simple_description/urdf/anymal.urdf",
+        RobotEntry { key: "anymal", label: "ANYmal B", urdf: "urdf/oems/anymal_anybotics/anymal_b_simple_description/urdf/anymal.urdf",
             packages: &[("meshes", "urdf/oems/anymal_anybotics/anymal_b_simple_description/meshes")],
             focus: Vec3::new(0.0, 0.3, 0.0), distance: 2.0, category: Category::Quadruped },
         RobotEntry { key: "spot", label: "Boston Dynamics Spot", urdf: "urdf/oems/spot_boston_dynamics/spot_base_urdf/model.urdf",
             packages: &[],
             focus: Vec3::new(0.0, 0.3, 0.0), distance: 2.0, category: Category::Quadruped },
         RobotEntry { key: "robotiq_2f85", label: "Robotiq 2F-85", urdf: "urdf/matlab/robotiq2F85/urdf/robotiq2F85.urdf",
-            // URDF asks for `package://robotiq_2f_85_gripper_visualization/...`
-            // — NOT the folder name. Map the actual URI to the local dir.
             packages: &[("robotiq_2f_85_gripper_visualization", "urdf/matlab/robotiq2F85")],
             focus: Vec3::new(0.0, 0.05, 0.0), distance: 0.3, category: Category::Gripper },
         RobotEntry { key: "allegro", label: "Allegro Hand", urdf: "urdf/drake/allegro_hand_description/urdf/allegro_hand_description_right.urdf",
             packages: &[("drake", "urdf/drake/allegro_hand_description/manipulation_compat")],
             focus: Vec3::new(0.0, 0.1, 0.0), distance: 0.5, category: Category::Gripper },
+        // ── Unitree family (flat URDFs + DAE meshes, material colors) ─
+        RobotEntry { key: "unitree_a1", label: "Unitree A1", urdf: "urdf/unitree/a1_description/urdf/a1.urdf",
+            packages: &[("a1_description", "urdf/unitree/a1_description")],
+            focus: Vec3::new(0.0, 0.25, 0.0), distance: 1.5, category: Category::Quadruped },
+        RobotEntry { key: "unitree_go1", label: "Unitree Go1", urdf: "urdf/unitree/go1_description/urdf/go1.urdf",
+            packages: &[("go1_description", "urdf/unitree/go1_description")],
+            focus: Vec3::new(0.0, 0.25, 0.0), distance: 1.4, category: Category::Quadruped },
+        RobotEntry { key: "unitree_aliengo", label: "Unitree Aliengo", urdf: "urdf/unitree/aliengo_description/urdf/aliengo.urdf",
+            packages: &[("aliengo_description", "urdf/unitree/aliengo_description")],
+            focus: Vec3::new(0.0, 0.4, 0.0), distance: 1.8, category: Category::Quadruped },
+        RobotEntry { key: "unitree_b1", label: "Unitree B1", urdf: "urdf/unitree/b1_description/xacro/b1.urdf",
+            packages: &[("b1_description", "urdf/unitree/b1_description")],
+            focus: Vec3::new(0.0, 0.5, 0.0), distance: 2.0, category: Category::Quadruped },
+        RobotEntry { key: "unitree_b2", label: "Unitree B2", urdf: "urdf/unitree/b2_description/urdf/b2_description.urdf",
+            packages: &[("b2_description", "urdf/unitree/b2_description")],
+            focus: Vec3::new(0.0, 0.5, 0.0), distance: 2.2, category: Category::Quadruped },
+        RobotEntry { key: "unitree_h1", label: "Unitree H1 (humanoid)", urdf: "urdf/unitree/h1_description/urdf/h1.urdf",
+            packages: &[("h1_description", "urdf/unitree/h1_description")],
+            focus: Vec3::new(0.0, 0.9, 0.0), distance: 3.0, category: Category::Humanoid },
+        RobotEntry { key: "unitree_g1", label: "Unitree G1 (humanoid)", urdf: "urdf/unitree/g1_description/g1_29dof_mode_15.urdf",
+            packages: &[],
+            focus: Vec3::new(0.0, 0.7, 0.0), distance: 2.5, category: Category::Humanoid },
+        // ── Webots converts (proto2urdf.py) ──
+        RobotEntry { key: "robotti", label: "AGROINTELLI Robotti (Webots)", urdf: "urdf/webots/robotti/urdf/robotti.urdf",
+            packages: &[("robotti", "urdf/webots/robotti")],
+            focus: Vec3::new(0.0, 0.5, 0.0), distance: 4.0, category: Category::Mobile },
+        // ── Agricultural robots ──
+        RobotEntry { key: "agribot", label: "PRBonn AgriBot", urdf: "urdf/agri/agribot/urdf/agribot.urdf",
+            packages: &[("agribot", "urdf/agri/agribot")],
+            focus: Vec3::new(0.0, 0.3, 0.0), distance: 2.5, category: Category::Mobile },
+        RobotEntry { key: "hunter", label: "Agilex Hunter 2 (Ackermann)", urdf: "urdf/agri/hunter/urdf/hunter.urdf",
+            packages: &[("hunter", "urdf/agri/hunter")],
+            focus: Vec3::new(0.0, 0.3, 0.0), distance: 2.5, category: Category::Mobile },
+        RobotEntry { key: "ranger", label: "Agilex Ranger (4WS)", urdf: "urdf/agri/ranger/urdf/ranger.urdf",
+            packages: &[("ranger", "urdf/agri/ranger")],
+            focus: Vec3::new(0.0, 0.3, 0.0), distance: 2.5, category: Category::Mobile },
+        RobotEntry { key: "ranger_air", label: "Agilex Ranger Air", urdf: "urdf/agri/ranger_air/urdf/ranger_air.urdf",
+            packages: &[("ranger_air", "urdf/agri/ranger_air")],
+            focus: Vec3::new(0.0, 0.3, 0.0), distance: 3.0, category: Category::Mobile },
+        RobotEntry { key: "ranger_delta", label: "Agilex Ranger Delta", urdf: "urdf/agri/ranger_delta/urdf/ranger_delta.urdf",
+            packages: &[("ranger_delta", "urdf/agri/ranger_delta")],
+            focus: Vec3::new(0.0, 0.3, 0.0), distance: 2.5, category: Category::Mobile },
+        RobotEntry { key: "tracer", label: "Agilex Tracer", urdf: "urdf/agri/tracer/urdf/tracer.urdf",
+            packages: &[("tracer", "urdf/agri/tracer")],
+            focus: Vec3::new(0.0, 0.25, 0.0), distance: 2.0, category: Category::Mobile },
+        RobotEntry { key: "limo", label: "Agilex LIMO S2", urdf: "urdf/agri/limo/urdf/limo.urdf",
+            packages: &[("limo", "urdf/agri/limo")],
+            focus: Vec3::new(0.0, 0.15, 0.0), distance: 1.2, category: Category::Mobile },
+        RobotEntry { key: "gem", label: "Polaris GEM e2 (full car)", urdf: "urdf/agri/gem/urdf/gem.urdf",
+            packages: &[("gem", "urdf/agri/gem")],
+            focus: Vec3::new(0.0, 0.8, 0.0), distance: 5.0, category: Category::Mobile },
+        // ── Ackermann vehicles (cars, race cars) ──
+        RobotEntry { key: "tianracer", label: "Tianracer (1/10 Jetson)", urdf: "urdf/agri/tianracer/urdf/tianracer.urdf",
+            packages: &[("tianracer", "urdf/agri/tianracer")],
+            focus: Vec3::new(0.0, 0.15, 0.0), distance: 1.5, category: Category::Mobile },
+        RobotEntry { key: "mushr", label: "MuSHR (UW 1/10)", urdf: "urdf/agri/mushr/urdf/mushr.urdf",
+            packages: &[("mushr", "urdf/agri/mushr")],
+            focus: Vec3::new(0.0, 0.12, 0.0), distance: 1.2, category: Category::Mobile },
+        // ── Drones (DJI meshes from TareqAlqutami/dji_ros_simulator) ─
+        RobotEntry { key: "dji_m100", label: "DJI Matrice 100", urdf: "urdf/drones/urdf/dji_m100.urdf",
+            packages: &[("drones", "urdf/drones")],
+            focus: Vec3::new(0.0, 0.05, 0.0), distance: 1.0, category: Category::Drone },
+        RobotEntry { key: "dji_m600", label: "DJI Matrice 600", urdf: "urdf/drones/urdf/dji_m600.urdf",
+            packages: &[("drones", "urdf/drones")],
+            focus: Vec3::new(0.0, 0.3, 0.0), distance: 3.0, category: Category::Drone },
     ])
 }
 
@@ -677,6 +745,7 @@ fn draw_panel(
                             Category::Humanoid,
                             Category::Quadruped,
                             Category::Gripper,
+                            Category::Drone,
                         ] {
                             ui.label(
                                 egui::RichText::new(cat.label())
