@@ -3,42 +3,33 @@ name = "bevy_urdf"
 version = "0.0.1"
 edition = "2024"
 license = "MIT"
+description = "Pure URDF → Bevy library: parse, mesh-load, spawn, run forward kinematics. No physics, no UI, no camera."
 
 [dependencies]
-# f64 physics — `rapier3d-urdf` only wraps the f32 flavour so we drop it
-# and build URDF colliders inline against the f64 rapier math types.
-rapier3d-f64 = "0.32"
-
-# URDF parsing + forward/inverse kinematics. Same pairing upstream `urdf-viz`
-# uses (k re-exports nalgebra, which is also rapier3d's linear algebra).
+# URDF parsing + forward kinematics. `k` re-exports nalgebra; we feed
+# the resolved isometries straight into per-link `Transform`s in
+# `kinematics::sync_fk_to_transforms`. Same pairing upstream
+# `urdf-viz` uses.
 urdf-rs = "0.9"
 k = "0.32"
 
-# Mesh loading for URDF-referenced STL / OBJ / DAE files. `mesh-loader` is
-# what urdf-viz uses and hands back vertex/normal/index arrays we feed to
-# bevy::render::mesh::Mesh.
+# STL / OBJ / DAE loader for URDF `<mesh filename="…">`. Hands back
+# vertex / normal / index arrays we feed to `bevy::render::mesh::Mesh`.
 mesh-loader = "0.1.6"
-rand = "0.10"
 
+# Typed errors at the library boundary.
 thiserror = "2"
 
-# Used by the `urdf-viewer` binary for the "Browse…" file-picker button.
-# Pulled in unconditionally because the binary is the crate's showcase.
-rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "tokio"] }
-
-# Bevy + ecosystem. Declared once here with their full feature sets so
-# every crate that needs Bevy pulls the SAME build (otherwise cargo
-# would see distinct feature unions and rebuild bevy twice).
+# Bevy. `default-features = false` so consumers' own `bevy =
+# "0.18"` import controls the feature union — Cargo unifies and
+# rebuilds Bevy once across the workspace. Only the features the
+# library itself actually touches are listed here.
 bevy = { version = "0.18", default-features = false, features = [
     "std",
     "async_executor",
     "multi_threaded",
     "bevy_asset",
-    "bevy_state",
     "bevy_log",
-    "bevy_window",
-    "bevy_winit",
-    "bevy_input_focus",
     "bevy_render",
     "bevy_core_pipeline",
     "bevy_pbr",
@@ -46,26 +37,7 @@ bevy = { version = "0.18", default-features = false, features = [
     "bevy_mesh",
     "bevy_camera",
     "bevy_image",
-    "bevy_gizmos",
-    "bevy_gizmos_render",
     "bevy_scene",
-    "default_font",
-    "tonemapping_luts",
-    "smaa_luts",
-    "ktx2",
-    "zstd_rust",
     "png",
     "jpeg",
-    "x11",
-    "reflect_auto_register",
 ] }
-bevy_egui = { version = "0.39", default-features = false, features = [
-    "default_fonts",
-    "render",
-] }
-# Gamepad input — polled each frame by `gearbox-viz::gamepad`.
-gilrs = "0.11"
-
-[[bin]]
-name = "urdf-viewer"
-path = "src/bin/urdf_viewer.rs"

@@ -1,18 +1,17 @@
-pub mod camera;
-pub mod keyboard;
+//! Pure URDF → Bevy library. Parses URDF (`urdf-rs`), loads referenced
+//! meshes (`mesh-loader`), spawns one Bevy entity per link with the
+//! authored materials, and runs forward kinematics from a `k::Chain`
+//! into per-link `Transform`s. No physics, no UI, no camera — those
+//! are consumer concerns.
+
 pub mod kinematics;
-pub mod manipulation;
 pub mod mesh;
-pub mod overlays;
-pub mod physics;
 pub mod plugin;
 pub mod robot;
-pub mod ui;
 pub mod urdf;
 
-pub use camera::{ArcballCamera, ArcballCameraPlugin};
 pub use plugin::UrdfPlugin;
-pub use robot::{LoadRobot, Robot, RobotLink, RobotRoot};
-pub use ui::{draw_joint_controls, UiState};
-pub use manipulation::RobotArms;
+pub use robot::{
+    GeomBaseColor, GeomKind, JointKind, LoadRobot, Robot, RobotJoint, RobotLink, RobotRoot,
+};
 pub use urdf::{PackageMap, UrdfError};

@@ -1,10 +1,13 @@
 use bevy::prelude::*;
 
-use crate::{camera, keyboard, kinematics, manipulation, mesh, overlays, robot, ui};
+use crate::{kinematics, mesh, robot};
 
-/// Core URDF visualization plugin. Does NOT include physics — add
-/// `UrdfPhysicsPlugin` separately if you want rapier colliders (it's
-/// expensive in debug builds).
+/// Library-only URDF plugin. Wires up the three systems a consumer
+/// always wants: spawning the robot from a `LoadRobot` event, loading
+/// the URDF's referenced meshes into Bevy assets, and running
+/// forward kinematics from `k::Chain` into per-link `Transform`s.
+/// Physics, camera, UI, and overlays are explicitly NOT here — bring
+/// your own.
 #[derive(Default)]
 pub struct UrdfPlugin;
 
@@ -14,11 +17,6 @@ impl Plugin for UrdfPlugin {
             robot::RobotPlugin,
             mesh::MeshPlugin,
             kinematics::KinematicsPlugin,
-            camera::ArcballCameraPlugin,
-            manipulation::ManipulationPlugin,
-            ui::UrdfUiPlugin,
-            keyboard::UrdfKeyboardPlugin,
-            overlays::UrdfOverlaysPlugin,
         ));
     }
 }
